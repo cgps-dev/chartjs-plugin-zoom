@@ -410,10 +410,16 @@ var zoomPlugin = {
 					y : offsetY
 				};
 
+				let zoomDirection = undefined;
+				if (event.metaKey || event.ctrlKey) {
+					zoomDirection = 'x';
+				} else if (event.altKey) {
+					zoomDirection = 'y';
+				}
 				if (event.deltaY < 0) {
-					doZoom(chartInstance, 1.1, center);
+					doZoom(chartInstance, 1.1, center, zoomDirection);
 				} else {
-					doZoom(chartInstance, 0.909, center);
+					doZoom(chartInstance, 0.909, center, zoomDirection);
 				}
 				// Prevent the event from triggering the default behavior (eg. Content scrolling).
 				event.preventDefault();
