@@ -136,8 +136,20 @@ function zoomTimeScale(scale, zoom, center, zoomOptions) {
 	var minDelta = newDiff * min_percent;
 	var maxDelta = newDiff * max_percent;
 
-	options.time.min = rangeMinLimiter(zoomOptions, scale.getValueForPixel(scale.getPixelForValue(scale.min) + minDelta));
-	options.time.max = rangeMaxLimiter(zoomOptions, scale.getValueForPixel(scale.getPixelForValue(scale.max) - maxDelta));
+	var newMin = scale.getValueForPixel(scale.getPixelForValue(scale.min) + minDelta);
+	var newMax = scale.getValueForPixel(scale.getPixelForValue(scale.max) - maxDelta);
+
+	var diffMinMax = newMax.diff(newMin);
+	var minLimitExceeded = rangeMinLimiter(zoomOptions, diffMinMax) != diffMinMax;
+	var maxLimitExceeded = rangeMaxLimiter(zoomOptions, diffMinMax) != diffMinMax;
+
+	if (!minLimitExceeded && !maxLimitExceeded) {
+		options.time.min = newMin;
+		options.time.max = newMax;
+	}
+
+	// options.time.min = rangeMinLimiter(zoomOptions, scale.getValueForPixel(scale.getPixelForValue(scale.min) + minDelta));
+	// options.time.max = rangeMaxLimiter(zoomOptions, scale.getValueForPixel(scale.getPixelForValue(scale.max) - maxDelta));
 }
 
 function zoomNumericalScale(scale, zoom, center, zoomOptions) {
@@ -151,8 +163,20 @@ function zoomNumericalScale(scale, zoom, center, zoomOptions) {
 	var minDelta = newDiff * min_percent;
 	var maxDelta = newDiff * max_percent;
 
-	scale.options.ticks.min = rangeMinLimiter(zoomOptions, scale.min + minDelta);
-	scale.options.ticks.max = rangeMaxLimiter(zoomOptions, scale.max - maxDelta);
+	// scale.options.ticks.min = rangeMinLimiter(zoomOptions, scale.min + minDelta);
+	// scale.options.ticks.max = rangeMaxLimiter(zoomOptions, scale.max - maxDelta);
+
+	const min = scale.min + minDelta;
+	const max = scale.max - maxDelta;
+	const deltaRange = (max - min);
+
+	const minRange = zoomOptions.limits.min;
+	const maxRange = zoomOptions.limits.max + 1;
+	
+	if (deltaRange >= minRange && deltaRange < maxRange) {
+		scale.options.ticks.min = rangeMinLimiter(zoomOptions, scale.min + minDelta);
+		scale.options.ticks.max = rangeMaxLimiter(zoomOptions, scale.max - maxDelta);
+	}
 }
 
 function zoomScale(scale, zoom, center, zoomOptions) {
@@ -239,15 +263,23 @@ function panNumericalScale(scale, delta, panOptions) {
 	var start = scale.start,
 		end = scale.end;
 
+	const minTick = tickOpts.min;
+	const maxTick = tickOpts.max;
+
+	let min = null;
+	let max = null;
+
 	if (tickOpts.reverse) {
-		tickOpts.max = scale.getValueForPixel(scale.getPixelForValue(start) - delta);
-		tickOpts.min = scale.getValueForPixel(scale.getPixelForValue(end) - delta);
+		max = scale.getValueForPixel(scale.getPixelForValue(start) - delta);
+		min = scale.getValueForPixel(scale.getPixelForValue(end) - delta);
 	} else {
-		tickOpts.min = scale.getValueForPixel(scale.getPixelForValue(start) - delta);
-		tickOpts.max = scale.getValueForPixel(scale.getPixelForValue(end) - delta);
+		min = scale.getValueForPixel(scale.getPixelForValue(start) - delta);
+		max = scale.getValueForPixel(scale.getPixelForValue(end) - delta);
 	}
-	tickOpts.min = rangeMinLimiter(panOptions, tickOpts.min);
-	tickOpts.max = rangeMaxLimiter(panOptions, tickOpts.max);
+	if (min > panOptions.rangeMin[panOptions.scaleAxes] && max < panOptions.rangeMax[panOptions.scaleAxes]) {
+		tickOpts.min = min;
+		tickOpts.max = max;
+	}
 }
 
 function panScale(scale, delta, panOptions) {
