@@ -143,13 +143,23 @@ function zoomTimeScale(scale, zoom, center, zoomOptions) {
 	var minLimitExceeded = rangeMinLimiter(zoomOptions, diffMinMax) != diffMinMax;
 	var maxLimitExceeded = rangeMaxLimiter(zoomOptions, diffMinMax) != diffMinMax;
 
-	if (!minLimitExceeded && !maxLimitExceeded) {
-		options.time.min = newMin;
-		options.time.max = newMax;
-	}
+	var lowerBound = scale.chart.config.options.pan.rangeMin[zoomOptions.scaleAxes];
+	var upperBound = scale.chart.config.options.pan.rangeMax[zoomOptions.scaleAxes];	
 
-	// options.time.min = rangeMinLimiter(zoomOptions, scale.getValueForPixel(scale.getPixelForValue(scale.min) + minDelta));
-	// options.time.max = rangeMaxLimiter(zoomOptions, scale.getValueForPixel(scale.getPixelForValue(scale.max) - maxDelta));
+	if (!minLimitExceeded && !maxLimitExceeded) {
+		if (newMin < lowerBound) {
+			newMin += (lowerBound - newMin);
+			newMax += (lowerBound - newMin);
+		} else if (newMax > upperBound) {
+			newMin -= (newMax - upperBound);
+			newMax -= (newMax - upperBound);
+		}
+		scale.options.time.min = newMin;
+		scale.options.time.max = newMax;
+	} else if (maxLimitExceeded) {
+		scale.options.time.min = lowerBound;
+		scale.options.time.max = upperBound;
+	}
 }
 
 function zoomNumericalScale(scale, zoom, center, zoomOptions) {
@@ -166,16 +176,29 @@ function zoomNumericalScale(scale, zoom, center, zoomOptions) {
 	// scale.options.ticks.min = rangeMinLimiter(zoomOptions, scale.min + minDelta);
 	// scale.options.ticks.max = rangeMaxLimiter(zoomOptions, scale.max - maxDelta);
 
-	const min = scale.min + minDelta;
-	const max = scale.max - maxDelta;
-	const deltaRange = (max - min);
+	var newMin = scale.min + minDelta;
+	var newMax = scale.max - maxDelta;
 
-	const minRange = zoomOptions.limits.min;
-	const maxRange = zoomOptions.limits.max + 1;
-	
-	if (deltaRange >= minRange && deltaRange < maxRange) {
-		scale.options.ticks.min = rangeMinLimiter(zoomOptions, scale.min + minDelta);
-		scale.options.ticks.max = rangeMaxLimiter(zoomOptions, scale.max - maxDelta);
+	var diffMinMax = newMax - newMin;
+	var minLimitExceeded = rangeMinLimiter(zoomOptions, diffMinMax) != diffMinMax;
+	var maxLimitExceeded = rangeMaxLimiter(zoomOptions, diffMinMax) != diffMinMax;
+
+	var lowerBound = scale.chart.config.options.pan.rangeMin[zoomOptions.scaleAxes];
+	var upperBound = scale.chart.config.options.pan.rangeMax[zoomOptions.scaleAxes];
+
+	if (!minLimitExceeded && !maxLimitExceeded) {
+		if (newMin < lowerBound) {
+			newMin += (lowerBound - newMin);
+			newMax += (lowerBound - newMin);
+		} else if (newMax > upperBound) {
+			newMin -= (newMax - upperBound);
+			newMax -= (newMax - upperBound);
+		}
+		scale.options.ticks.min = newMin;
+		scale.options.ticks.max = newMax;
+	} else if (maxLimitExceeded) {
+		scale.options.ticks.min = lowerBound;
+		scale.options.ticks.max = upperBound;
 	}
 }
 
@@ -263,11 +286,11 @@ function panNumericalScale(scale, delta, panOptions) {
 	var start = scale.start,
 		end = scale.end;
 
-	const minTick = tickOpts.min;
-	const maxTick = tickOpts.max;
+	var minTick = tickOpts.min;
+	var maxTick = tickOpts.max;
 
-	let min = null;
-	let max = null;
+	var min = null;
+	var max = null;
 
 	if (tickOpts.reverse) {
 		max = scale.getValueForPixel(scale.getPixelForValue(start) - delta);
@@ -276,7 +299,11 @@ function panNumericalScale(scale, delta, panOptions) {
 		min = scale.getValueForPixel(scale.getPixelForValue(start) - delta);
 		max = scale.getValueForPixel(scale.getPixelForValue(end) - delta);
 	}
-	if (min > panOptions.rangeMin[panOptions.scaleAxes] && max < panOptions.rangeMax[panOptions.scaleAxes]) {
+
+	var minBound = panOptions.rangeMin[panOptions.scaleAxes];
+	var maxBound = panOptions.rangeMax[panOptions.scaleAxes];
+
+	if ((min > minBound && max < maxBound) || (max < maxBound && max > tickOpts.max) || (min > minBound && min < tickOpts.min)) {
 		tickOpts.min = min;
 		tickOpts.max = max;
 	}
