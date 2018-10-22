@@ -469,7 +469,7 @@ var zoomPlugin = {
 				let zoomDirection = undefined;
 				if (event.metaKey || event.ctrlKey) {
 					zoomDirection = 'x';
-				} else if (event.altKey) {
+				} else if (event.altKey || event.shiftKey) {
 					zoomDirection = 'y';
 				}
 				if (event.deltaY < 0) {
