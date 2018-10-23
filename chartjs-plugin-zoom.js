@@ -144,7 +144,7 @@ function zoomTimeScale(scale, zoom, center, zoomOptions) {
 	var maxLimitExceeded = rangeMaxLimiter(zoomOptions, diffMinMax) != diffMinMax;
 
 	var lowerBound = scale.chart.config.options.pan.rangeMin[zoomOptions.scaleAxes];
-	var upperBound = scale.chart.config.options.pan.rangeMax[zoomOptions.scaleAxes];	
+	var upperBound = scale.chart.config.options.pan.rangeMax[zoomOptions.scaleAxes];
 
 	if (!minLimitExceeded && !maxLimitExceeded) {
 		if (newMin < lowerBound) {
@@ -246,7 +246,7 @@ function doZoom(chartInstance, zoom, center, whichAxes) {
 			}
 		});
 
-		chartInstance.update();
+		// chartInstance.update();
 		if (zoomOptions.onZoom) {
 			zoomOptions.onZoom();
 		}
@@ -335,7 +335,7 @@ function doPan(chartInstance, deltaX, deltaY) {
 			}
 		});
 
-		chartInstance.update();
+		// chartInstance.update();
 		if (panOptions.onPan) {
 			panOptions.onPan();
 		}
